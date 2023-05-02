@@ -15,6 +15,9 @@
   ];
 
   var ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
+  
+  var KeyboardLatinSymbols   = 'QqWwEeRrTtYyUuIiOoPp{[}]AaSsDdFfGgHhJjKkLl:;"\'ZzXxCcVvBbNnMm<,>.~`';
+  var KeyboardRussianSymbols = 'ЙйЦцУуКкЕеНнГгШшЩщЗзХхЪъФфЫыВвАаПпРрОоЛлДдЖжЭэЯяЧчСсМмИиТтЬьБбЮюЁё';
 
   var DefaultWhitelist = {
     // Global attributes allowed on any supplied element below.
@@ -65,6 +68,50 @@
   var DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[a-z0-9+/]+=*$/i;
 
   var ParseableAttributes = ['title', 'placeholder']; // attributes to use as settings, can add others in the future
+  
+  function getPureRussianString(stringValue)
+  {
+      if (stringValue.length == 0) {
+          return '';
+      }
+      
+      var result = '';
+      
+      for (var i = 0; i < stringValue.length; i++) {
+          var index = KeyboardLatinSymbols.indexOf(stringValue[i]);
+          
+          if (index < 0) {
+              result += stringValue[i];
+          }
+          else {
+              result += KeyboardRussianSymbols[index];
+          }
+      }
+      
+      return result;
+  }
+  
+  function getPureLatinString(stringValue)
+  {
+      if (stringValue.length == 0) {
+          return '';
+      }
+      
+      var result = '';
+      
+      for (var i = 0; i < stringValue.length; i++) {
+          var index = KeyboardRussianSymbols.indexOf(stringValue[i]);
+          
+          if (index < 0) {
+              result += stringValue[i];
+          }
+          else {
+              result += KeyboardLatinSymbols[index];
+          }
+      }
+      
+      return result;
+  }
 
   function allowedAttribute (attr, allowedAttributeList) {
     var attrName = attr.nodeName.toLowerCase();
@@ -3006,6 +3053,9 @@
                 cacheArr = [],
                 searchStyle = that._searchStyle(),
                 normalizeSearch = that.options.liveSearchNormalize;
+                
+            var pureRussianQuery = getPureRussianString(q).toUpperCase();
+            var pureEnglishQuery = getPureLatinString(q);
 
             if (normalizeSearch) q = normalizeToBase(q);
 
@@ -3013,7 +3063,9 @@
               var li = that.selectpicker.main.data[i];
 
               if (!cache[i]) {
-                cache[i] = stringSearch(li, q, searchStyle, normalizeSearch, that.options.searchBySubtext, that.options.searchByTokens);
+                cache[i] = stringSearch(li, q, searchStyle, normalizeSearch, that.options.searchBySubtext, that.options.searchByTokens)
+                        || stringSearch(li, pureRussianQuery, searchStyle, normalizeSearch, that.options.searchBySubtext, that.options.searchByTokens)
+                        || stringSearch(li, pureEnglishQuery, searchStyle, normalizeSearch, that.options.searchBySubtext, that.options.searchByTokens);
               }
 
               if (cache[i] && li.headerIndex !== undefined && cacheArr.indexOf(li.headerIndex) === -1) {
@@ -3331,13 +3383,18 @@
         if (/^(.)\1+$/.test(keyHistory)) {
           keyHistory = keyHistory.charAt(0);
         }
+        
+        var pureRussianQuery = getPureRussianString(keyHistory).toUpperCase();
+        var pureEnglishQuery = getPureLatinString(keyHistory);
 
         // find matches
         for (var i = 0; i < that.selectpicker.current.data.length; i++) {
           var li = that.selectpicker.current.data[i],
               hasMatch;
 
-          hasMatch = stringSearch(li, keyHistory, 'startsWith', true, that.options.searchBySubtext, that.options.searchByTokens);
+          hasMatch = stringSearch(li, keyHistory, 'startsWith', true, that.options.searchBySubtext, that.options.searchByTokens)
+                  || stringSearch(li, pureRussianQuery, 'startsWith', true, that.options.searchBySubtext, that.options.searchByTokens)
+                  || stringSearch(li, pureEnglishQuery, 'startsWith', true, that.options.searchBySubtext, that.options.searchByTokens);
 
           if (hasMatch && that.selectpicker.view.canHighlight[i]) {
             matches.push(li.element);
