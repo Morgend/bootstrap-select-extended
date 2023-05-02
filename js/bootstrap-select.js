@@ -393,13 +393,20 @@
   };
   // </editor-fold>
 
-  function stringSearch (li, searchString, method, normalize) {
+  function stringSearch (li, searchString, method, normalize, searchBySubtext, searchByTokens) {
     var stringTypes = [
-          'display',
-          'subtext',
-          'tokens'
-        ],
-        searchSuccess = false;
+          'display'
+        ];
+        
+    var searchSuccess = false;
+    
+    if (searchBySubtext) {
+        stringTypes.push('subtext');
+    }
+    
+    if (searchByTokens) {
+        stringTypes.push('tokens');
+    }
 
     for (var i = 0; i < stringTypes.length; i++) {
       var stringType = stringTypes[i],
@@ -998,7 +1005,9 @@
     display: false,
     sanitize: true,
     sanitizeFn: null,
-    whiteList: DefaultWhitelist
+    whiteList: DefaultWhitelist,
+    searchBySubtext: false,
+    searchByTokens: false
   };
 
   Selectpicker.prototype = {
@@ -3004,7 +3013,7 @@
               var li = that.selectpicker.main.data[i];
 
               if (!cache[i]) {
-                cache[i] = stringSearch(li, q, searchStyle, normalizeSearch);
+                cache[i] = stringSearch(li, q, searchStyle, normalizeSearch, that.options.searchBySubtext, that.options.searchByTokens);
               }
 
               if (cache[i] && li.headerIndex !== undefined && cacheArr.indexOf(li.headerIndex) === -1) {
@@ -3328,7 +3337,7 @@
           var li = that.selectpicker.current.data[i],
               hasMatch;
 
-          hasMatch = stringSearch(li, keyHistory, 'startsWith', true);
+          hasMatch = stringSearch(li, keyHistory, 'startsWith', true, that.options.searchBySubtext, that.options.searchByTokens);
 
           if (hasMatch && that.selectpicker.view.canHighlight[i]) {
             matches.push(li.element);
