@@ -1355,8 +1355,8 @@
         if (refresh) {
           scrollTop = this.$menuInner[0].scrollTop;
         } else if (!that.multiple) {
-          var element = that.$element[0],
-              selectedIndex = (element.options[element.selectedIndex] || {}).liIndex;
+          var element = that.$element[0];
+          var selectedIndex = (element.options[element.selectedIndex] || {}).liIndex;
 
           if (typeof selectedIndex === 'number' && that.options.size !== false) {
             var selectedData = that.selectpicker.main.data[selectedIndex],
@@ -1389,9 +1389,8 @@
             previousElements,
             menuIsDifferent = true,
             isVirtual = that.isVirtual();
-
         that.selectpicker.view.scrollTop = scrollTop;
-
+        
         chunkSize = that.options.chunkSize; // number of options in a chunk
         chunkCount = Math.ceil(size / chunkSize) || 1; // number of chunks
 
@@ -1501,7 +1500,7 @@
             if (isVirtual === true) {
               marginTop = (that.selectpicker.view.position0 === 0 ? 0 : that.selectpicker.current.data[that.selectpicker.view.position0 - 1].position);
               marginBottom = (that.selectpicker.view.position1 > size - 1 ? 0 : that.selectpicker.current.data[size - 1].position - that.selectpicker.current.data[that.selectpicker.view.position1 - 1].position);
-
+              
               menuInner.firstChild.style.marginTop = marginTop + 'px';
               menuInner.firstChild.style.marginBottom = marginBottom + 'px';
             } else {
@@ -1551,6 +1550,8 @@
             }
           }
         }
+
+        that.$menuInner[0].scrollTop = scrollTop;
 
         that.prevActiveElement = that.activeElement;
 
@@ -2217,6 +2218,7 @@
         search.appendChild(input);
         menu.appendChild(search);
       }
+      
       if (actions) menu.appendChild(actions);
       menuInner.appendChild(menuInnerInner);
       menu.appendChild(menuInner);
@@ -2274,7 +2276,6 @@
       this.sizeInfo.totalMenuWidth = this.sizeInfo.menuWidth;
       this.sizeInfo.scrollBarWidth = scrollBarWidth;
       this.sizeInfo.selectHeight = this.$newElement[0].offsetHeight;
-
       this.setPositionData();
     },
 
