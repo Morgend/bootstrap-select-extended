@@ -2,6 +2,9 @@
   'use strict';
 
   var DISALLOWED_ATTRIBUTES = ['sanitize', 'whiteList', 'sanitizeFn'];
+  
+  var FULL_SCREEN_X_LIMIT = 575;
+  var FULL_SCREEN_OFFSET = 10;
 
   var uriAttrs = [
     'background',
@@ -2206,7 +2209,15 @@
       if (this.selectpicker.view.widestOption) {
         menuInnerInner.appendChild(this.selectpicker.view.widestOption.cloneNode(true));
       }
-
+      
+      // Setup width for correct li-height calculation
+      if (window.screen.width <= FULL_SCREEN_X_LIMIT) {
+        menu.style.width = (document.body.clientWidth - 2 * FULL_SCREEN_OFFSET) + 'px';
+      }
+      else {
+          menu.style.width = this.sizeInfo.selectWidth + 'px';
+      }
+      
       menuInnerInner.appendChild(li);
       menuInnerInner.appendChild(divider);
       menuInnerInner.appendChild(dropdownHeader);
@@ -2226,7 +2237,7 @@
       newElement.appendChild(menu);
 
       document.body.appendChild(newElement);
-
+      
       var liHeight = li.offsetHeight,
           dropdownHeaderHeight = dropdownHeader ? dropdownHeader.offsetHeight : 0,
           headerHeight = header ? header.offsetHeight : 0,
@@ -2277,6 +2288,9 @@
       this.sizeInfo.scrollBarWidth = scrollBarWidth;
       this.sizeInfo.selectHeight = this.$newElement[0].offsetHeight;
       this.setPositionData();
+      
+      // Reset width
+      menu.style.width = 'auto';
     },
 
     getSelectPosition: function () {
@@ -2296,6 +2310,17 @@
 
       var winPad = that.options.windowPadding;
 
+        
+      if (window.screen.width <= FULL_SCREEN_X_LIMIT) {
+        this.sizeInfo.selectOffsetTop = FULL_SCREEN_OFFSET;
+        this.sizeInfo.selectOffsetBot = FULL_SCREEN_OFFSET;
+        this.sizeInfo.selectOffsetLeft = FULL_SCREEN_OFFSET;
+        this.sizeInfo.selectOffsetRight = FULL_SCREEN_OFFSET;
+        this.sizeInfo.selectOffsetTop = FULL_SCREEN_OFFSET;
+        this.sizeInfo.selectOffsetLeft = FULL_SCREEN_OFFSET;
+        return;
+      }
+      
       this.sizeInfo.selectOffsetTop = pos.top - containerPos.top - $window.scrollTop();
       this.sizeInfo.selectOffsetBot = $window.height() - this.sizeInfo.selectOffsetTop - this.sizeInfo.selectHeight - containerPos.top - winPad[2];
       this.sizeInfo.selectOffsetLeft = pos.left - containerPos.left - $window.scrollLeft();
@@ -2343,7 +2368,14 @@
         this.selectpicker.dropup = isDropup;
       }
 
-      if (this.options.size === 'auto') {
+      // Full screen mode:
+      if (window.screen.width <= FULL_SCREEN_X_LIMIT) {
+        var fullSizeHeight = window.screen.height - 2 * FULL_SCREEN_OFFSET;
+        minHeight = fullSizeHeight;
+        maxHeight = fullSizeHeight;
+        menuInnerHeight += maxHeight - menuPadding.vert;
+        menuInnerMinHeight = menuInnerHeight;
+      } else if (this.options.size === 'auto') {
         _minHeight = this.selectpicker.current.data.length > 3 ? this.sizeInfo.liHeight * 3 + this.sizeInfo.menuExtras.vert - 2 : 0;
         menuHeight = this.sizeInfo.selectOffsetBot - this.sizeInfo.menuExtras.vert;
         minHeight = _minHeight + headerHeight + searchHeight + actionsHeight + doneButtonHeight;
@@ -2352,7 +2384,7 @@
         if (this.$newElement.hasClass(classNames.DROPUP)) {
           menuHeight = this.sizeInfo.selectOffsetTop - this.sizeInfo.menuExtras.vert;
         }
-
+        
         maxHeight = menuHeight;
         menuInnerHeight = menuHeight - headerHeight - searchHeight - actionsHeight - doneButtonHeight - menuPadding.vert;
       } else if (this.options.size && this.options.size != 'auto' && this.selectpicker.current.elements.length > this.options.size) {
@@ -2365,13 +2397,22 @@
         maxHeight = menuHeight + headerHeight + searchHeight + actionsHeight + doneButtonHeight;
         minHeight = menuInnerMinHeight = '';
       }
-
+      
+      
+      if (typeof(minHeight) === 'number' && maxHeight < minHeight) {
+          maxHeight = minHeight;
+      }
+      
+      if (typeof(menuInnerHeight) === 'number' && menuInnerHeight < menuInnerMinHeight) {
+          menuInnerHeight = menuInnerMinHeight;
+      }
+      
       this.$menu.css({
         'max-height': maxHeight + 'px',
         'overflow': 'hidden',
         'min-height': minHeight + 'px'
       });
-
+      
       this.$menuInner.css({
         'max-height': menuInnerHeight + 'px',
         'overflow': 'hidden auto',
@@ -2389,6 +2430,7 @@
       if (this.options.dropdownAlignRight === 'auto') {
         this.$menu.toggleClass(classNames.MENURIGHT, this.sizeInfo.selectOffsetLeft > this.sizeInfo.selectOffsetRight && this.sizeInfo.selectOffsetRight < (this.sizeInfo.totalMenuWidth - selectWidth));
       }
+
 
       if (this.dropdown && this.dropdown._popper) this.dropdown._popper.update();
     },
@@ -2429,7 +2471,17 @@
     setWidth: function () {
       var that = this;
 
-      if (this.options.width === 'auto') {
+      // Full screen mode:
+      if (window.screen.width <= FULL_SCREEN_X_LIMIT) {
+        that.sizeInfo.selectWidth = (window.screen.width - 2 * FULL_SCREEN_OFFSET);
+        that.sizeInfo.totalMenuWidth = that.sizeInfo.selectWidth;
+        
+        var fullSizeWidth = that.sizeInfo.selectWidth + 'px';
+        
+        that.$menu.css('min-width', fullSizeWidth);
+        that.$menu.css('max-width', fullSizeWidth);
+        
+      } else if (this.options.width === 'auto') {
         requestAnimationFrame(function () {
           that.$menu.css('min-width', '0');
 
@@ -2711,6 +2763,7 @@
         if (!that.dropdown && version.major === '4') {
           that.dropdown = that.$button.data('bs.dropdown');
           that.dropdown._menu = that.$menu[0];
+          console.log(that.dropdown);
         }
       });
 
